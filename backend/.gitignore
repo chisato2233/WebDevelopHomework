@@ -1,0 +1,32 @@
+# Python 虚拟环境
+venv/
+.venv/
+env/
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Django
+*.log
+local_settings.py
+
+# 媒体文件（用户上传的图片/视频，可选择是否忽略）
+# media/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 注意：db.sqlite3 故意不忽略，方便提交测试数据
+# 如果不想上传数据库，取消下面这行的注释：
+# db.sqlite3
+
