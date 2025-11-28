@@ -5,6 +5,23 @@ import Link from 'next/link';
 import MainLayout from '@/components/layout/MainLayout';
 import api from '@/lib/api';
 import type { Need } from '@/types';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
+import { Plus, MapPin, Clock, MessageSquare, Pencil, Trash2 } from 'lucide-react';
 
 export default function MyNeedsPage() {
   const [needs, setNeeds] = useState<Need[]>([]);
@@ -17,6 +34,7 @@ export default function MyNeedsPage() {
       setNeeds(response.data.results || response.data);
     } catch (error) {
       console.error('获取我的需求失败:', error);
+      toast.error('获取需求列表失败');
     } finally {
       setLoading(false);
     }
@@ -27,117 +45,151 @@ export default function MyNeedsPage() {
   }, []);
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定要删除这条需求吗？')) return;
-    
     try {
       await api.delete(`/needs/${id}/`);
+      toast.success('需求删除成功');
       fetchMyNeeds();
     } catch (error: any) {
-      alert(error.response?.data?.message || '删除失败');
+      toast.error(error.response?.data?.message || '删除失败');
     }
-  };
-
-  const getStatusBadge = (need: Need) => {
-    if (need.status === -1) {
-      return <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm">已取消</span>;
-    }
-    return <span className="px-2 py-1 bg-green-100 text-green-600 rounded text-sm">已发布</span>;
   };
 
   return (
     <MainLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">我的需求</h1>
-            <p className="text-gray-500 mt-1">管理您发布的服务需求</p>
+            <h1 className="text-3xl font-bold">我的需求</h1>
+            <p className="text-muted-foreground mt-1">管理您发布的服务需求</p>
           </div>
-          <Link
-            href="/my-needs/create"
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-          >
-            <span>➕</span> 发布新需求
-          </Link>
+          <Button asChild>
+            <Link href="/my-needs/create">
+              <Plus className="mr-2 h-4 w-4" />
+              发布新需求
+            </Link>
+          </Button>
         </div>
 
         {/* Needs List */}
         {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-500">加载中...</p>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Card key={i}>
+                <CardContent className="pt-6">
+                  <div className="space-y-3">
+                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         ) : needs.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-xl shadow">
-            <span className="text-6xl">📝</span>
-            <p className="mt-4 text-gray-500">您还没有发布任何需求</p>
-            <Link
-              href="/my-needs/create"
-              className="mt-4 inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              发布第一条需求
-            </Link>
-          </div>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">📝</div>
+                <h3 className="text-lg font-medium">您还没有发布任何需求</h3>
+                <p className="text-muted-foreground mt-1 mb-4">
+                  发布第一条需求，让社区伙伴来帮助您
+                </p>
+                <Button asChild>
+                  <Link href="/my-needs/create">
+                    <Plus className="mr-2 h-4 w-4" />
+                    发布第一条需求
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
           <div className="space-y-4">
             {needs.map((need) => (
-              <div
-                key={need.id}
-                className="bg-white rounded-xl shadow-md p-6"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                        {need.service_type}
-                      </span>
-                      {getStatusBadge(need)}
-                      {need.response_count && need.response_count > 0 && (
-                        <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
-                          🔔 {need.response_count} 条响应
+              <Card key={need.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div className="flex-1 space-y-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge>{need.service_type}</Badge>
+                        <Badge variant={need.status === 0 ? 'default' : 'secondary'}>
+                          {need.status === 0 ? '已发布' : '已取消'}
+                        </Badge>
+                        {need.response_count && need.response_count > 0 && (
+                          <Badge variant="destructive" className="animate-pulse">
+                            <MessageSquare className="mr-1 h-3 w-3" />
+                            {need.response_count} 条新响应
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <Link
+                        href={`/needs/${need.id}`}
+                        className="block text-xl font-semibold hover:text-primary transition-colors"
+                      >
+                        {need.title}
+                      </Link>
+                      
+                      <p className="text-muted-foreground line-clamp-2">
+                        {need.description}
+                      </p>
+                      
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          {need.region?.full_name || '未知地区'}
                         </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          {new Date(need.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button variant="outline" asChild>
+                        <Link href={`/needs/${need.id}`}>查看</Link>
+                      </Button>
+                      
+                      {need.status === 0 && (!need.response_count || need.response_count === 0) && (
+                        <>
+                          <Button variant="outline" asChild>
+                            <Link href={`/my-needs/${need.id}/edit`}>
+                              <Pencil className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                          
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" className="text-destructive hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>确认删除</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  确定要删除这条需求吗？此操作无法撤销。
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>取消</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(need.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  删除
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
                       )}
                     </div>
-                    <Link
-                      href={`/needs/${need.id}`}
-                      className="text-xl font-semibold text-gray-800 hover:text-blue-600"
-                    >
-                      {need.title}
-                    </Link>
-                    <p className="mt-2 text-gray-600 line-clamp-2">
-                      {need.description}
-                    </p>
-                    <div className="mt-4 text-sm text-gray-500">
-                      📍 {need.region?.full_name || '未知地区'} · 
-                      🕐 {new Date(need.created_at).toLocaleDateString()}
-                    </div>
                   </div>
-                  <div className="flex gap-2 ml-4">
-                    <Link
-                      href={`/needs/${need.id}`}
-                      className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50"
-                    >
-                      查看
-                    </Link>
-                    {need.status === 0 && (!need.response_count || need.response_count === 0) && (
-                      <>
-                        <Link
-                          href={`/my-needs/${need.id}/edit`}
-                          className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                        >
-                          编辑
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(need.id)}
-                          className="px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50"
-                        >
-                          删除
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}
@@ -145,4 +197,3 @@ export default function MyNeedsPage() {
     </MainLayout>
   );
 }
-

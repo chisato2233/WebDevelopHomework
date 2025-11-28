@@ -3,6 +3,24 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  navigationMenuTriggerStyle,
+} from '@/components/ui/navigation-menu';
+import { Home, Search, FileText, HandHelping, BarChart3, User, LogOut, Settings } from 'lucide-react';
 
 export default function Header() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -13,92 +31,121 @@ export default function Header() {
     router.push('/login');
   };
 
+  const getInitials = (name: string) => {
+    return name?.slice(0, 2).toUpperCase() || 'U';
+  };
+
   return (
-    <header className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-2xl">🤝</span>
-            <span className="text-xl font-bold">好服务</span>
-          </Link>
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center justify-between">
+        {/* Logo */}
+        <Link href="/dashboard" className="flex items-center gap-2 font-bold text-xl">
+          <span className="text-2xl">🤝</span>
+          <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+            好服务
+          </span>
+        </Link>
 
-          {/* Navigation */}
-          {isAuthenticated && (
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link
-                href="/dashboard"
-                className="hover:text-blue-200 transition-colors"
-              >
-                首页
-              </Link>
-              <Link
-                href="/needs"
-                className="hover:text-blue-200 transition-colors"
-              >
-                浏览需求
-              </Link>
-              <Link
-                href="/my-needs"
-                className="hover:text-blue-200 transition-colors"
-              >
-                我需要
-              </Link>
-              <Link
-                href="/my-responses"
-                className="hover:text-blue-200 transition-colors"
-              >
-                我服务
-              </Link>
+        {/* Navigation */}
+        {isAuthenticated && (
+          <NavigationMenu className="hidden md:flex">
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                  <Link href="/dashboard">
+                    <Home className="mr-2 h-4 w-4" />
+                    首页
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                  <Link href="/needs">
+                    <Search className="mr-2 h-4 w-4" />
+                    浏览需求
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                  <Link href="/my-needs">
+                    <FileText className="mr-2 h-4 w-4" />
+                    我需要
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                  <Link href="/my-responses">
+                    <HandHelping className="mr-2 h-4 w-4" />
+                    我服务
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
               {isAdmin && (
-                <Link
-                  href="/statistics"
-                  className="hover:text-blue-200 transition-colors"
-                >
-                  统计分析
-                </Link>
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                    <Link href="/statistics">
+                      <BarChart3 className="mr-2 h-4 w-4" />
+                      统计分析
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
               )}
-            </nav>
-          )}
+            </NavigationMenuList>
+          </NavigationMenu>
+        )}
 
-          {/* User Menu */}
-          <div className="flex items-center space-x-4">
-            {isAuthenticated ? (
-              <>
-                <Link
-                  href="/profile"
-                  className="flex items-center space-x-2 hover:text-blue-200 transition-colors"
-                >
-                  <span className="text-lg">👤</span>
-                  <span className="hidden sm:inline">{user?.full_name}</span>
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
-                >
-                  退出
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="hover:text-blue-200 transition-colors"
-                >
-                  登录
-                </Link>
-                <Link
-                  href="/register"
-                  className="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors"
-                >
-                  注册
-                </Link>
-              </>
-            )}
-          </div>
+        {/* User Menu */}
+        <div className="flex items-center gap-4">
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {getInitials(user?.full_name || '')}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user?.full_name}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      @{user?.username}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push('/profile')}>
+                  <User className="mr-2 h-4 w-4" />
+                  个人信息
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/profile')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  设置
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  退出登录
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" asChild>
+                <Link href="/login">登录</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/register">注册</Link>
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </header>
   );
 }
-

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Header from './Header';
 import { useAuth } from '@/hooks/useAuth';
+import { Toaster } from '@/components/ui/sonner';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -14,7 +15,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  // 公开路径（不需要登录）
   const publicPaths = ['/login', '/register'];
   const isPublicPath = publicPaths.includes(pathname);
 
@@ -26,22 +26,22 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">加载中...</p>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+          <p className="text-muted-foreground">加载中...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="container py-6">
         {children}
       </main>
+      <Toaster />
     </div>
   );
 }
-
