@@ -6,8 +6,8 @@ export interface User {
   phone: string;
   bio: string;
   user_type: 'normal' | 'admin';
-  created_at: string;
-  updated_at: string;
+  date_joined: string;
+  last_login: string | null;
 }
 
 // 地域类型
