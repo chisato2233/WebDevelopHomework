@@ -1,7 +1,7 @@
 # "好服务"平台 API 接口文档
 
 > **版本**：v1.0  
-> **基础URL**：`http://localhost:8001/api`  
+> **基础URL**：`http://localhost:8000/api`  
 > **认证方式**：JWT Bearer Token
 
 ---

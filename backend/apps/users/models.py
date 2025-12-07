@@ -18,6 +18,8 @@ class User(AbstractUser):
     )
     full_name = models.CharField(
         max_length=100, 
+        blank=True,
+        default='',
         verbose_name='真实姓名'
     )
     phone = models.CharField(

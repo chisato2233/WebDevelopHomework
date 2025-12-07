@@ -25,8 +25,9 @@ export const registerSchema = z.object({
   password: passwordSchema,
   confirmPassword: z.string(),
   full_name: z.string()
-    .min(2, '姓名至少2个字符')
-    .max(100, '姓名最多100个字符'),
+    .max(100, '姓名最多100个字符')
+    .optional()
+    .or(z.literal('')),
   phone: phoneSchema,
   bio: z.string().max(500, '简介最多500个字符').optional(),
 }).refine((data) => data.password === data.confirmPassword, {

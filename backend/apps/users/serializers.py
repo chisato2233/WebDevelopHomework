@@ -20,6 +20,8 @@ class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_password])
     confirm_password = serializers.CharField(write_only=True)
     
+    full_name = serializers.CharField(max_length=100, required=False, allow_blank=True, default='')
+    
     class Meta:
         model = User
         fields = ['username', 'password', 'confirm_password', 'full_name', 'phone', 'bio']
@@ -41,7 +43,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(
             username=validated_data['username'],
             password=validated_data['password'],
-            full_name=validated_data['full_name'],
+            full_name=validated_data.get('full_name', ''),
             phone=validated_data['phone'],
             bio=validated_data.get('bio', ''),
         )

@@ -46,17 +46,31 @@ export default function RegisterPage() {
       await registerUser({
         username: data.username,
         password: data.password,
-        full_name: data.full_name,
+        confirm_password: data.confirmPassword,  // 添加确认密码字段
+        full_name: data.full_name || '',
         phone: data.phone,
         bio: data.bio,
       });
       router.push('/dashboard');
     } catch (err: any) {
-      const errors = err.response?.data?.errors;
-      if (errors?.username) {
-        setError('用户名已存在');
+      console.error('注册错误:', err.response?.data || err.message || err);
+      
+      const data = err.response?.data;
+      const errors = data?.errors;
+      
+      if (errors) {
+        // 收集所有字段的错误信息
+        const errorMessages: string[] = [];
+        for (const [field, messages] of Object.entries(errors)) {
+          if (Array.isArray(messages)) {
+            errorMessages.push(...messages);
+          } else if (typeof messages === 'string') {
+            errorMessages.push(messages);
+          }
+        }
+        setError(errorMessages.join('；') || '注册失败');
       } else {
-        setError(err.response?.data?.message || '注册失败，请稍后重试');
+        setError(data?.message || err.message || '注册失败，请稍后重试');
       }
     } finally {
       setLoading(false);
@@ -154,20 +168,6 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="full_name">
-                  真实姓名 <Badge variant="destructive" className="ml-1 text-xs">必填</Badge>
-                </Label>
-                <Input
-                  id="full_name"
-                  placeholder="请输入真实姓名"
-                  {...register('full_name')}
-                />
-                {errors.full_name && (
-                  <p className="text-sm text-destructive">{errors.full_name.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="phone">
                   手机号码 <Badge variant="destructive" className="ml-1 text-xs">必填</Badge>
                 </Label>
@@ -179,6 +179,18 @@ export default function RegisterPage() {
                 />
                 {errors.phone && (
                   <p className="text-sm text-destructive">{errors.phone.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="full_name">真实姓名</Label>
+                <Input
+                  id="full_name"
+                  placeholder="请输入真实姓名（选填）"
+                  {...register('full_name')}
+                />
+                {errors.full_name && (
+                  <p className="text-sm text-destructive">{errors.full_name.message}</p>
                 )}
               </div>
 
