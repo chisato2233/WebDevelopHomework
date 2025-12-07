@@ -96,7 +96,14 @@ export default function NeedDetailPage() {
       setShowResponseForm(false);
       router.push('/my-responses');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || '提交失败');
+      const data = error.response?.data;
+      // 优先显示具体的字段错误
+      if (data?.errors) {
+        const errorMessages = Object.values(data.errors).flat();
+        toast.error(errorMessages[0] as string || '提交失败');
+      } else {
+        toast.error(data?.message || '提交失败');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -171,6 +178,11 @@ export default function NeedDetailPage() {
               <Badge variant={need.status === 0 ? 'default' : 'secondary'}>
                 {need.status === 0 ? '已发布' : '已取消'}
               </Badge>
+              {(need.accepted_count ?? 0) > 0 && (
+                <Badge variant="default">
+                  {need.accepted_count} 人已接单
+                </Badge>
+              )}
             </div>
             <CardTitle className="text-2xl">{need.title}</CardTitle>
           </CardHeader>
@@ -261,10 +273,12 @@ export default function NeedDetailPage() {
                               <span className="font-medium">{response.user?.full_name}</span>
                               <Badge variant={
                                 response.status === 0 ? 'outline' :
-                                response.status === 1 ? 'default' : 'destructive'
+                                response.status === 1 ? 'default' :
+                                response.status === 2 ? 'destructive' : 'secondary'
                               }>
                                 {response.status === 0 ? '待接受' :
-                                 response.status === 1 ? '已同意' : '已拒绝'}
+                                 response.status === 1 ? '已同意' :
+                                 response.status === 2 ? '已拒绝' : '已取消'}
                               </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">

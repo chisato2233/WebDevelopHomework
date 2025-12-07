@@ -1,16 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import MainLayout from '@/components/layout/MainLayout';
 import api from '@/lib/api';
-import type { Region } from '@/types';
+import type { Region, Need } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,10 +36,14 @@ const SERVICE_TYPES = [
   '其他',
 ];
 
-export default function CreateNeedPage() {
+export default function EditNeedPage() {
   const router = useRouter();
+  const params = useParams();
+  const needId = params.id;
+
   const [regions, setRegions] = useState<Region[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [formData, setFormData] = useState({
     region: '',
@@ -50,6 +55,39 @@ export default function CreateNeedPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // 获取需求详情
+  useEffect(() => {
+    const fetchNeed = async () => {
+      try {
+        const response = await api.get(`/needs/${needId}/`);
+        const need: Need = response.data;
+        
+        // 检查是否可以编辑
+        if (!need.can_edit) {
+          toast.error('该需求已有响应，无法编辑');
+          router.push('/my-needs');
+          return;
+        }
+        
+        setFormData({
+          region: need.region?.id?.toString() || '',
+          service_type: need.service_type,
+          title: need.title,
+          description: need.description,
+          images: need.images || [],
+          videos: need.videos || [],
+        });
+      } catch (error) {
+        console.error('获取需求详情失败:', error);
+        toast.error('获取需求详情失败');
+        router.push('/my-needs');
+      }
+    };
+
+    fetchNeed();
+  }, [needId, router]);
+
+  // 获取地域列表
   useEffect(() => {
     const fetchRegions = async () => {
       try {
@@ -58,6 +96,8 @@ export default function CreateNeedPage() {
       } catch (error) {
         console.error('获取地域失败:', error);
         toast.error('获取地域列表失败');
+      } finally {
+        setLoading(false);
       }
     };
     fetchRegions();
@@ -85,9 +125,9 @@ export default function CreateNeedPage() {
   };
 
   const confirmSubmit = async () => {
-    setLoading(true);
+    setSubmitting(true);
     try {
-      await api.post('/needs/', {
+      await api.put(`/needs/${needId}/`, {
         region: parseInt(formData.region),
         service_type: formData.service_type,
         title: formData.title,
@@ -95,15 +135,37 @@ export default function CreateNeedPage() {
         images: formData.images,
         videos: formData.videos,
       });
-      toast.success('需求发布成功！');
+      toast.success('需求修改成功！');
       router.push('/my-needs');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || '发布失败');
+      toast.error(error.response?.data?.message || '修改失败');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
       setShowConfirm(false);
     }
   };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="max-w-2xl mx-auto space-y-4">
+          <Skeleton className="h-10 w-20" />
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -115,9 +177,9 @@ export default function CreateNeedPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">发布服务需求</CardTitle>
+            <CardTitle className="text-2xl">编辑服务需求</CardTitle>
             <CardDescription>
-              填写您的服务需求，让社区伙伴来帮助您
+              修改您的服务需求信息
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -220,9 +282,9 @@ export default function CreateNeedPage() {
                 >
                   取消
                 </Button>
-                <Button type="submit" className="flex-1" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  发布需求
+                <Button type="submit" className="flex-1" disabled={submitting}>
+                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  保存修改
                 </Button>
               </div>
             </form>
@@ -232,10 +294,10 @@ export default function CreateNeedPage() {
         <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>确认发布</AlertDialogTitle>
+              <AlertDialogTitle>确认修改</AlertDialogTitle>
               <AlertDialogDescription asChild>
                 <div>
-                  <span>确定要发布这条需求吗？</span>
+                  <span>确定要保存这些修改吗？</span>
                   <div className="mt-4 p-4 bg-muted rounded-lg space-y-2">
                     <p><strong>服务类型：</strong>{formData.service_type}</p>
                     <p><strong>需求主题：</strong>{formData.title}</p>
@@ -245,9 +307,9 @@ export default function CreateNeedPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>取消</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmSubmit} disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                确认发布
+              <AlertDialogAction onClick={confirmSubmit} disabled={submitting}>
+                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                确认保存
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -256,3 +318,4 @@ export default function CreateNeedPage() {
     </MainLayout>
   );
 }
+

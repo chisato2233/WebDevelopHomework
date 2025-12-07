@@ -80,8 +80,10 @@ class Need(models.Model):
     
     @property
     def can_edit(self):
-        """是否可以编辑（未被响应且状态正常）"""
-        return self.status == 0 and self.responses.count() == 0
+        """是否可以编辑（没有待处理或已同意的响应）"""
+        # 只有待接受(0)和已同意(1)的响应才阻止编辑
+        # 已拒绝(2)和已取消(3)的响应不影响
+        return self.status == 0 and self.responses.filter(status__in=[0, 1]).count() == 0
     
     @property
     def can_delete(self):

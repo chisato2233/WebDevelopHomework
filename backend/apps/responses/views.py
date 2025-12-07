@@ -136,7 +136,8 @@ class NeedResponsesView(generics.ListAPIView):
     
     def get_queryset(self):
         need_id = self.kwargs.get('need_id')
-        return ServiceResponse.objects.filter(need_id=need_id).select_related('user', 'need')
+        # 排除已取消的响应（status=3）
+        return ServiceResponse.objects.filter(need_id=need_id).exclude(status=3).select_related('user', 'need')
 
 
 class AcceptResponseView(APIView):

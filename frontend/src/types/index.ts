@@ -47,6 +47,9 @@ export interface Need {
   videos: string[];
   status: NeedStatus;
   response_count?: number;
+  accepted_count?: number;
+  can_edit?: boolean;
+  can_delete?: boolean;
   created_at: string;
   updated_at: string;
 }

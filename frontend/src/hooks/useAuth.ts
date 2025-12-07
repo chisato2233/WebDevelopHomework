@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import type { User, LoginResponse, ApiResponse } from '@/types';
 
+// 追踪是否已在客户端挂载
+let isMounted = false;
+
 // 缓存用户数据，避免每次 getSnapshot 返回新对象导致无限循环
 let cachedUser: User | null = null;
 let cachedUserJson: string | null = null;
@@ -19,6 +22,14 @@ function emitChange() {
 
 function subscribe(callback: () => void) {
   listeners = [...listeners, callback];
+  
+  // 首次订阅时标记为已挂载，并触发更新
+  if (!isMounted) {
+    isMounted = true;
+    // 延迟触发以确保 React 完成当前渲染
+    setTimeout(emitChange, 0);
+  }
+  
   return () => {
     listeners = listeners.filter(l => l !== callback);
   };
@@ -50,8 +61,18 @@ function getSnapshot(): User | null {
   return cachedUser;
 }
 
+// 服务端快照 - 服务器没有 localStorage，只能返回 null
 function getServerSnapshot(): User | null {
   return null;
+}
+
+// 获取 loading 状态的快照
+function getMountedSnapshot(): boolean {
+  return isMounted;
+}
+
+function getServerMountedSnapshot(): boolean {
+  return false;  // 服务端永远是 "加载中"
 }
 
 // 更新 localStorage 并通知订阅者
@@ -72,6 +93,7 @@ function setStoredUser(user: User | null) {
 export function useAuth() {
   // 使用 useSyncExternalStore 安全地同步 localStorage，避免 hydration 问题
   const user = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const mounted = useSyncExternalStore(subscribe, getMountedSnapshot, getServerMountedSnapshot);
   const router = useRouter();
 
   // 登录
@@ -131,7 +153,7 @@ export function useAuth() {
 
   return {
     user,
-    loading: false,  // useSyncExternalStore 是同步的，不需要 loading
+    loading: !mounted,  // 客户端挂载前为 true，挂载后为 false
     isAuthenticated: !!user,
     isAdmin: user?.user_type === 'admin',
     login,

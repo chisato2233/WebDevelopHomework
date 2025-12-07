@@ -164,10 +164,15 @@ export default function NeedsPage() {
                     <div className="flex-1 space-y-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge>{need.service_type}</Badge>
-                        {need.response_count && need.response_count > 0 && (
-                          <Badge variant="secondary">
+                        {(need.accepted_count ?? 0) > 0 && (
+                          <Badge variant="default">
+                            {need.accepted_count} 人已接单
+                          </Badge>
+                        )}
+                        {(need.response_count ?? 0) > 0 && (
+                          <Badge variant="outline">
                             <MessageSquare className="mr-1 h-3 w-3" />
-                            {need.response_count} 条响应
+                            {need.response_count} 待处理
                           </Badge>
                         )}
                       </div>

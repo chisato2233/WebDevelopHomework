@@ -13,8 +13,8 @@ __pycache__/
 *.log
 local_settings.py
 
-# 媒体文件（用户上传的图片/视频，可选择是否忽略）
-# media/
+# 媒体文件（用户上传的图片/视频）
+media/
 
 # IDE
 .idea/

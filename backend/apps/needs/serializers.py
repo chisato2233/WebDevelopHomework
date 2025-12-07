@@ -9,17 +9,26 @@ class NeedListSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     region = RegionSerializer(read_only=True)
     response_count = serializers.SerializerMethodField()
+    accepted_count = serializers.SerializerMethodField()
+    can_edit = serializers.ReadOnlyField()
+    can_delete = serializers.ReadOnlyField()
     
     class Meta:
         model = Need
         fields = [
             'id', 'user', 'region', 'service_type', 'title', 
             'description', 'images', 'videos', 'status', 
-            'response_count', 'created_at', 'updated_at'
+            'response_count', 'accepted_count', 'can_edit', 'can_delete',
+            'created_at', 'updated_at'
         ]
     
     def get_response_count(self, obj):
-        return obj.responses.count()
+        # 只统计待接受(0)的新响应，用于显示"新响应"数量
+        return obj.responses.filter(status=0).count()
+    
+    def get_accepted_count(self, obj):
+        # 统计已同意(1)的响应数量
+        return obj.responses.filter(status=1).count()
 
 
 class NeedDetailSerializer(serializers.ModelSerializer):
@@ -27,6 +36,7 @@ class NeedDetailSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     region = RegionSerializer(read_only=True)
     response_count = serializers.SerializerMethodField()
+    accepted_count = serializers.SerializerMethodField()
     can_edit = serializers.ReadOnlyField()
     can_delete = serializers.ReadOnlyField()
     
@@ -35,12 +45,17 @@ class NeedDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'region', 'service_type', 'title',
             'description', 'images', 'videos', 'status',
-            'response_count', 'can_edit', 'can_delete',
+            'response_count', 'accepted_count', 'can_edit', 'can_delete',
             'created_at', 'updated_at'
         ]
     
     def get_response_count(self, obj):
-        return obj.responses.count()
+        # 只统计待接受(0)的新响应，用于显示"新响应"数量
+        return obj.responses.filter(status=0).count()
+    
+    def get_accepted_count(self, obj):
+        # 统计已同意(1)的响应数量
+        return obj.responses.filter(status=1).count()
 
 
 class NeedCreateSerializer(serializers.ModelSerializer):

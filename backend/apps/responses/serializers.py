@@ -7,13 +7,12 @@ from apps.needs.serializers import NeedListSerializer
 class ResponseListSerializer(serializers.ModelSerializer):
     """响应列表序列化器"""
     user = UserSerializer(read_only=True)
-    need_title = serializers.CharField(source='need.title', read_only=True)
-    need_service_type = serializers.CharField(source='need.service_type', read_only=True)
+    need = NeedListSerializer(read_only=True)  # 返回完整的需求对象
     
     class Meta:
         model = ServiceResponse
         fields = [
-            'id', 'need', 'need_title', 'need_service_type', 'user',
+            'id', 'need', 'user',
             'description', 'images', 'videos', 'status',
             'created_at', 'updated_at'
         ]
@@ -48,6 +47,17 @@ class ResponseCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('该需求已取消，无法响应')
         if value.user == self.context['request'].user:
             raise serializers.ValidationError('不能响应自己发布的需求')
+        
+        # 检查是否已经有有效响应（待接受或已同意）
+        user = self.context['request'].user
+        existing_response = ServiceResponse.objects.filter(
+            need=value,
+            user=user,
+            status__in=[0, 1]  # 待接受或已同意
+        ).exists()
+        if existing_response:
+            raise serializers.ValidationError('您已对该需求提交过响应')
+        
         return value
     
     def create(self, validated_data):

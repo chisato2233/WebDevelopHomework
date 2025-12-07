@@ -116,7 +116,12 @@ export default function MyNeedsPage() {
                         <Badge variant={need.status === 0 ? 'default' : 'secondary'}>
                           {need.status === 0 ? '已发布' : '已取消'}
                         </Badge>
-                        {need.response_count && need.response_count > 0 && (
+                        {(need.accepted_count ?? 0) > 0 && (
+                          <Badge variant="default">
+                            {need.accepted_count} 人已接单
+                          </Badge>
+                        )}
+                        {(need.response_count ?? 0) > 0 && (
                           <Badge variant="destructive" className="animate-pulse">
                             <MessageSquare className="mr-1 h-3 w-3" />
                             {need.response_count} 条新响应
@@ -152,7 +157,7 @@ export default function MyNeedsPage() {
                         <Link href={`/needs/${need.id}`}>查看</Link>
                       </Button>
                       
-                      {need.status === 0 && (!need.response_count || need.response_count === 0) && (
+                      {need.can_edit && (
                         <>
                           <Button variant="outline" asChild>
                             <Link href={`/my-needs/${need.id}/edit`}>

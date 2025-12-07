@@ -135,6 +135,8 @@ WebDevelopHomework/
 │   │   ├── users/              # 用户认证模块
 │   │   ├── regions/            # 地域模块
 │   │   ├── needs/              # "我需要"模块
+│   │   │   ├── views.py        # 需求视图
+│   │   │   └── upload_views.py # 文件上传视图
 │   │   ├── responses/          # "我服务"模块
 │   │   └── stats/              # 统计分析模块
 │   ├── media/                  # 上传文件存储
@@ -149,7 +151,10 @@ WebDevelopHomework/
 │   │   │   ├── register/       # 注册页
 │   │   │   ├── dashboard/      # 仪表板
 │   │   │   ├── needs/          # 浏览需求
+│   │   │   │   └── [id]/       # 需求详情页
 │   │   │   ├── my-needs/       # 我的需求
+│   │   │   │   ├── create/     # 创建需求
+│   │   │   │   └── [id]/edit/  # 编辑需求
 │   │   │   ├── my-responses/   # 我的响应
 │   │   │   └── profile/        # 个人信息
 │   │   ├── components/         # 组件
@@ -176,6 +181,7 @@ WebDevelopHomework/
 | 认证 | `/api/auth/` | 注册、登录、个人信息 |
 | 地域 | `/api/regions/` | 地域列表查询 |
 | 需求 | `/api/needs/` | 需求 CRUD、我的需求 |
+| 文件上传 | `/api/needs/upload/` | 图片/视频上传 |
 | 响应 | `/api/responses/` | 响应 CRUD、接受/拒绝 |
 | 统计 | `/api/stats/` | 月度统计数据 |
 
@@ -286,4 +292,4 @@ MonthlyStatistics (月度统计)
 
 ---
 
-*最后更新: 2024-11-28*
+*最后更新: 2025-12-07*
