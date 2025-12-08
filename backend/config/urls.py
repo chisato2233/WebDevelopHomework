@@ -2,13 +2,13 @@
 URL configuration for config project.
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
-from django.conf.urls.static import static
+from apps.needs.stream_views import stream_media
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    
+
     # API 路由
     path('api/auth/', include('apps.users.urls')),
     path('api/regions/', include('apps.regions.urls')),
@@ -17,6 +17,8 @@ urlpatterns = [
     path('api/statistics/', include('apps.stats.urls')),
 ]
 
-# 开发环境下提供媒体文件访问
+# 媒体文件访问 - 使用支持 Range 请求的流视图
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', stream_media, name='media-stream'),
+    ]

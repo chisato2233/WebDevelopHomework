@@ -26,7 +26,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { ArrowLeft, MapPin, User, Clock, Phone, Loader2, Check, X } from 'lucide-react';
+import { IconArrowLeft, IconMapPin, IconUser, IconClock, IconPhone, IconLoader2, IconCheck, IconX, IconPhoto, IconVideo } from '@tabler/icons-react';
+import { ReactNextPlayer } from 'reactnextplayer';
 
 export default function NeedDetailPage() {
   const params = useParams();
@@ -166,7 +167,7 @@ export default function NeedDetailPage() {
     <MainLayout>
       <div className="max-w-4xl mx-auto space-y-6">
         <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <IconArrowLeft className="mr-2 h-4 w-4" />
           返回
         </Button>
 
@@ -188,24 +189,74 @@ export default function NeedDetailPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <p className="text-muted-foreground whitespace-pre-wrap">{need.description}</p>
-            
+
+            {/* Images */}
+            {need.images && need.images.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <IconPhoto className="h-4 w-4" />
+                  <span>图片 ({need.images.length})</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {need.images.map((image, index) => (
+                    <a
+                      key={index}
+                      href={`http://localhost:8000${image}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block aspect-square rounded-lg overflow-hidden border hover:opacity-80 transition-opacity"
+                    >
+                      <img
+                        src={`http://localhost:8000${image}`}
+                        alt={`图片 ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Videos */}
+            {need.videos && need.videos.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <IconVideo className="h-4 w-4" />
+                  <span>视频 ({need.videos.length})</span>
+                </div>
+                <div className="space-y-4">
+                  {need.videos.map((video, index) => (
+                    <div key={index} className="rounded-lg overflow-hidden border aspect-video">
+                      <ReactNextPlayer
+                        src={`http://localhost:8000${video}`}
+                        controls
+                        width="100%"
+                        height="100%"
+                        color="#3b82f6"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <Separator />
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <IconMapPin className="h-4 w-4 text-muted-foreground" />
                 <span>{need.region?.full_name || '未知地区'}</span>
               </div>
               <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-muted-foreground" />
+                <IconUser className="h-4 w-4 text-muted-foreground" />
                 <span>{need.user?.full_name}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
+                <IconPhone className="h-4 w-4 text-muted-foreground" />
                 <span>{need.user?.phone}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
+                <IconClock className="h-4 w-4 text-muted-foreground" />
                 <span>{new Date(need.created_at).toLocaleString()}</span>
               </div>
             </div>
@@ -228,7 +279,7 @@ export default function NeedDetailPage() {
                         取消
                       </Button>
                       <Button onClick={handleSubmitResponse} disabled={submitting}>
-                        {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {submitting && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
                         提交响应
                       </Button>
                     </div>
@@ -297,7 +348,7 @@ export default function NeedDetailPage() {
                               size="sm"
                               onClick={() => setActionDialog({ type: 'accept', id: response.id })}
                             >
-                              <Check className="mr-1 h-4 w-4" />
+                              <IconCheck className="mr-1 h-4 w-4" />
                               接受
                             </Button>
                             <Button
@@ -305,7 +356,7 @@ export default function NeedDetailPage() {
                               variant="outline"
                               onClick={() => setActionDialog({ type: 'reject', id: response.id })}
                             >
-                              <X className="mr-1 h-4 w-4" />
+                              <IconX className="mr-1 h-4 w-4" />
                               拒绝
                             </Button>
                           </div>

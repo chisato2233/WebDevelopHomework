@@ -109,6 +109,14 @@ export function FileUpload({
 
   const Icon = type === 'image' ? IconPhoto : IconVideo;
 
+  // 构建完整的文件 URL
+  const getFullUrl = (url: string) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return `http://localhost:8000${url}`;
+  };
+
   return (
     <div className={cn('space-y-4', className)}>
       {/* 上传区域 */}
@@ -159,13 +167,13 @@ export function FileUpload({
               {file.type === 'image' ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={file.url}
+                  src={getFullUrl(file.url)}
                   alt={file.filename}
                   className="w-full h-24 object-cover rounded-lg border"
                 />
               ) : (
                 <video
-                  src={file.url}
+                  src={getFullUrl(file.url)}
                   className="w-full h-24 object-cover rounded-lg border"
                 />
               )}

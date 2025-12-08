@@ -168,3 +168,21 @@
     max-width: 1400px;
   }
 }
+
+/* ReactNextPlayer 全屏样式修复 */
+.rnp-container:fullscreen,
+.rnp-container:-webkit-full-screen,
+.rnp-container:-moz-full-screen,
+.rnp-container:-ms-fullscreen {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.rnp-container:fullscreen video,
+.rnp-container:-webkit-full-screen video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
