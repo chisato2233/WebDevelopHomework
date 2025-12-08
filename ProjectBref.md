@@ -1,3 +1,4 @@
+<!-- This file provides guidance to Claude Code (claude.ai/code) -->
 # 好服务平台 - 项目简报 (ProjectBref)
 
 > **此文件供 AI Agent 快速了解项目全貌，请在修改项目结构、依赖、架构时同步更新本文件。**
