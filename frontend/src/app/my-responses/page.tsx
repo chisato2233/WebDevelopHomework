@@ -22,7 +22,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { Clock, Pencil, Trash2, ExternalLink } from 'lucide-react';
+import { Clock, Pencil, Trash2, ExternalLink, ImageIcon, VideoIcon } from 'lucide-react';
 
 const STATUS_CONFIG: Record<number, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   0: { label: '待接受', variant: 'outline' },
@@ -92,7 +92,25 @@ export default function MyResponsesPage() {
             <p className="text-muted-foreground line-clamp-2">
               {response.description}
             </p>
-            
+
+            {/* 显示图片/视频数量 */}
+            {((response.images && response.images.length > 0) || (response.videos && response.videos.length > 0)) && (
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                {response.images && response.images.length > 0 && (
+                  <span className="flex items-center gap-1">
+                    <ImageIcon className="h-4 w-4" />
+                    {response.images.length} 张图片
+                  </span>
+                )}
+                {response.videos && response.videos.length > 0 && (
+                  <span className="flex items-center gap-1">
+                    <VideoIcon className="h-4 w-4" />
+                    {response.videos.length} 个视频
+                  </span>
+                )}
+              </div>
+            )}
+
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
               提交时间：{new Date(response.created_at).toLocaleString()}
@@ -181,7 +199,9 @@ export default function MyResponsesPage() {
               <Card>
                 <CardContent className="pt-6">
                   <div className="text-center py-12">
-                    <div className="text-6xl mb-4">🤝</div>
+                    <div className="text-6xl mb-4 text-muted-foreground">
+                      <Clock className="h-16 w-16 mx-auto" />
+                    </div>
                     <h3 className="text-lg font-medium">暂无响应记录</h3>
                     <p className="text-muted-foreground mt-1 mb-4">
                       浏览需求，为他人提供您的帮助

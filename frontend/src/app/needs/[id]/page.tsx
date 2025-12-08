@@ -28,6 +28,7 @@ import {
 import { toast } from 'sonner';
 import { IconArrowLeft, IconMapPin, IconUser, IconClock, IconPhone, IconLoader2, IconCheck, IconX, IconPhoto, IconVideo } from '@tabler/icons-react';
 import { ReactNextPlayer } from 'reactnextplayer';
+import { FileUpload } from '@/components/ui/file-upload';
 
 export default function NeedDetailPage() {
   const params = useParams();
@@ -37,6 +38,8 @@ export default function NeedDetailPage() {
   const [responses, setResponses] = useState<ServiceResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [responseText, setResponseText] = useState('');
+  const [responseImages, setResponseImages] = useState<string[]>([]);
+  const [responseVideos, setResponseVideos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [showResponseForm, setShowResponseForm] = useState(false);
   const [actionDialog, setActionDialog] = useState<{ type: 'accept' | 'reject'; id: number } | null>(null);
@@ -89,11 +92,13 @@ export default function NeedDetailPage() {
       await api.post('/responses/', {
         need: parseInt(params.id as string),
         description: responseText,
-        images: [],
-        videos: [],
+        images: responseImages,
+        videos: responseVideos,
       });
       toast.success('响应提交成功！');
       setResponseText('');
+      setResponseImages([]);
+      setResponseVideos([]);
       setShowResponseForm(false);
       router.push('/my-responses');
     } catch (error: any) {
@@ -267,15 +272,46 @@ export default function NeedDetailPage() {
                 <Separator />
                 {showResponseForm ? (
                   <div className="space-y-4">
-                    <Label>您的响应</Label>
-                    <Textarea
-                      value={responseText}
-                      onChange={(e) => setResponseText(e.target.value)}
-                      placeholder="描述您能提供的服务，包括经验、时间安排等..."
-                      rows={4}
-                    />
+                    <div className="space-y-2">
+                      <Label>响应描述</Label>
+                      <Textarea
+                        value={responseText}
+                        onChange={(e) => setResponseText(e.target.value)}
+                        placeholder="描述您能提供的服务，包括经验、时间安排等..."
+                        rows={4}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        已输入 {responseText.length} 个字符，至少需要 10 个字符
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>上传图片（可选）</Label>
+                      <FileUpload
+                        type="image"
+                        maxFiles={5}
+                        value={responseImages}
+                        onChange={setResponseImages}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>上传视频（可选）</Label>
+                      <FileUpload
+                        type="video"
+                        maxFiles={2}
+                        value={responseVideos}
+                        onChange={setResponseVideos}
+                      />
+                    </div>
+
                     <div className="flex gap-2">
-                      <Button variant="outline" onClick={() => setShowResponseForm(false)}>
+                      <Button variant="outline" onClick={() => {
+                        setShowResponseForm(false);
+                        setResponseText('');
+                        setResponseImages([]);
+                        setResponseVideos([]);
+                      }}>
                         取消
                       </Button>
                       <Button onClick={handleSubmitResponse} disabled={submitting}>
