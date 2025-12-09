@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -13,18 +13,99 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-} from '@/components/ui/navigation-menu';
 import { Home, Search, FileText, HandHelping, Shield, User, LogOut, Settings } from 'lucide-react';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { cn } from '@/lib/utils';
+import { useState } from 'react';
+
+interface NavItemProps {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  isActive: boolean;
+}
+
+// Spring transition config
+const springTransition = { type: 'spring' as const, stiffness: 500, damping: 30 };
+
+function NavItem({ href, icon, label, isActive }: NavItemProps) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Show label when active OR hovered
+  const showLabel = isActive || isHovered;
+
+  return (
+    <motion.div
+      layout="position"
+      transition={springTransition}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      className="relative"
+    >
+      <Link
+        href={href}
+        className={cn(
+          'relative flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-colors',
+          'hover:bg-accent hover:text-accent-foreground',
+          isActive
+            ? 'bg-accent text-accent-foreground'
+            : 'text-muted-foreground'
+        )}
+      >
+        <div className="flex items-center gap-2">
+          <motion.span
+            className="flex-shrink-0"
+            animate={{ scale: isHovered && !isActive ? 1.15 : 1 }}
+            transition={springTransition}
+          >
+            {icon}
+          </motion.span>
+          <AnimatePresence initial={false} mode="popLayout">
+            {showLabel && (
+              <motion.span
+                key="label"
+                initial={{ opacity: 0, scale: 0.8, filter: 'blur(4px)' }}
+                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, scale: 0.8, filter: 'blur(4px)' }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="whitespace-nowrap origin-left"
+              >
+                {label}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+      </Link>
+      <AnimatePresence>
+        {isActive && (
+          <motion.div
+            layoutId="nav-indicator"
+            className="absolute inset-0 rounded-md bg-accent -z-10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={springTransition}
+          />
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+// Navigation items configuration
+const navItems = [
+  { href: '/dashboard', icon: Home, label: '首页' },
+  { href: '/needs', icon: Search, label: '浏览需求' },
+  { href: '/my-needs', icon: FileText, label: '我需要' },
+  { href: '/my-responses', icon: HandHelping, label: '我服务' },
+];
+
+const adminNavItem = { href: '/admin', icon: Shield, label: '管理控制台' };
 
 export default function Header() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = () => {
     logout();
@@ -33,6 +114,14 @@ export default function Header() {
 
   const getInitials = (name: string) => {
     return name?.slice(0, 2).toUpperCase() || 'U';
+  };
+
+  // Check if a nav item is active based on pathname
+  const isNavActive = (href: string) => {
+    if (href === '/dashboard') {
+      return pathname === '/dashboard';
+    }
+    return pathname.startsWith(href);
   };
 
   return (
@@ -48,52 +137,27 @@ export default function Header() {
 
         {/* Navigation */}
         {isAuthenticated && (
-          <NavigationMenu className="hidden md:flex">
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                  <Link href="/dashboard">
-                    <Home className="mr-2 h-4 w-4" />
-                    首页
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                  <Link href="/needs">
-                    <Search className="mr-2 h-4 w-4" />
-                    浏览需求
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                  <Link href="/my-needs">
-                    <FileText className="mr-2 h-4 w-4" />
-                    我需要
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                  <Link href="/my-responses">
-                    <HandHelping className="mr-2 h-4 w-4" />
-                    我服务
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
+          <LayoutGroup>
+            <nav className="hidden md:flex items-center gap-1">
+              {navItems.map((item) => (
+                <NavItem
+                  key={item.href}
+                  href={item.href}
+                  icon={<item.icon className="h-4 w-4" />}
+                  label={item.label}
+                  isActive={isNavActive(item.href)}
+                />
+              ))}
               {isAdmin && (
-                <NavigationMenuItem>
-                  <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                    <Link href="/admin">
-                      <Shield className="mr-2 h-4 w-4" />
-                      管理控制台
-                    </Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
+                <NavItem
+                  href={adminNavItem.href}
+                  icon={<adminNavItem.icon className="h-4 w-4" />}
+                  label={adminNavItem.label}
+                  isActive={isNavActive(adminNavItem.href)}
+                />
               )}
-            </NavigationMenuList>
-          </NavigationMenu>
+            </nav>
+          </LayoutGroup>
         )}
 
         {/* User Menu */}
