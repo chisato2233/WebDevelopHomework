@@ -20,7 +20,7 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
-import { Home, Search, FileText, HandHelping, BarChart3, User, LogOut, Settings } from 'lucide-react';
+import { Home, Search, FileText, HandHelping, Shield, User, LogOut, Settings } from 'lucide-react';
 
 export default function Header() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -85,9 +85,9 @@ export default function Header() {
               {isAdmin && (
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                    <Link href="/statistics">
-                      <BarChart3 className="mr-2 h-4 w-4" />
-                      统计分析
+                    <Link href="/admin">
+                      <Shield className="mr-2 h-4 w-4" />
+                      管理控制台
                     </Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>

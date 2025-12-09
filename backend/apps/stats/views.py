@@ -10,10 +10,17 @@ from apps.responses.models import AcceptedMatch
 
 
 class MonthlyStatisticsView(APIView):
-    """月度统计数据"""
+    """月度统计数据（管理员）"""
     permission_classes = [IsAuthenticated]
-    
+
     def get(self, request):
+        # 检查是否是管理员
+        if request.user.user_type != 'admin':
+            return Response({
+                'code': 403,
+                'message': '仅管理员可访问'
+            }, status=403)
+
         # 获取查询参数
         start_month = request.query_params.get('start_month')
         end_month = request.query_params.get('end_month')
@@ -65,16 +72,16 @@ class MonthlyStatisticsView(APIView):
             count=Count('id')
         ).order_by('month')
         
-        # 按月聚合成功匹配数
-        matches_by_month = matches_query.extra(
-            select={'month': "strftime('%%Y-%%m', accepted_date)"}
-        ).values('month').annotate(
-            count=Count('id')
-        ).order_by('month')
-        
+        # 按月聚合成功匹配数（使用 Python 处理以兼容所有数据库）
+        matches_list = list(matches_query.values('accepted_date'))
+        matches_by_month_dict = {}
+        for match in matches_list:
+            month_key = match['accepted_date'].strftime('%Y-%m')
+            matches_by_month_dict[month_key] = matches_by_month_dict.get(month_key, 0) + 1
+
         # 构建图表数据
         needs_dict = {item['month'].strftime('%Y-%m'): item['count'] for item in needs_by_month}
-        matches_dict = {item['month']: item['count'] for item in matches_by_month}
+        matches_dict = matches_by_month_dict
         
         # 生成所有月份标签
         labels = []
