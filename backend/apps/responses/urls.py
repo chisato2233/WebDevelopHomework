@@ -7,6 +7,8 @@ from .views import (
     NeedResponsesView,
     AcceptResponseView,
     RejectResponseView,
+    AdminResponseListView,
+    AdminResponseDetailView,
 )
 
 urlpatterns = [
@@ -17,4 +19,7 @@ urlpatterns = [
     path('need/<int:need_id>/', NeedResponsesView.as_view(), name='need-responses'),
     path('<int:pk>/accept/', AcceptResponseView.as_view(), name='accept-response'),
     path('<int:pk>/reject/', RejectResponseView.as_view(), name='reject-response'),
+    # 管理员响应管理
+    path('admin/', AdminResponseListView.as_view(), name='admin-response-list'),
+    path('admin/<int:pk>/', AdminResponseDetailView.as_view(), name='admin-response-detail'),
 ]

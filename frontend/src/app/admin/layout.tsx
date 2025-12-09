@@ -5,8 +5,24 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuBadge,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
+  SidebarInset,
+  SidebarSeparator,
+} from '@/components/ui/sidebar';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import {
@@ -25,7 +41,7 @@ interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-const sidebarNavItems = [
+const mainNavItems = [
   {
     title: '概览',
     href: '/admin',
@@ -35,7 +51,12 @@ const sidebarNavItems = [
     title: '统计分析',
     href: '/admin/statistics',
     icon: BarChart3,
+    badge: '必选',
+    badgeVariant: 'primary' as const,
   },
+];
+
+const managementNavItems = [
   {
     title: '用户管理',
     href: '/admin/users',
@@ -54,6 +75,9 @@ const sidebarNavItems = [
     icon: HandHelping,
     badge: '选作',
   },
+];
+
+const settingsNavItems = [
   {
     title: '系统设置',
     href: '/admin/settings',
@@ -103,91 +127,176 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
+  const isActive = (href: string) => {
+    if (href === '/admin') {
+      return pathname === '/admin';
+    }
+    return pathname.startsWith(href);
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* 顶部栏 */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex h-14 items-center px-4 gap-4">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/dashboard">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              返回主站
-            </Link>
-          </Button>
+    <SidebarProvider>
+      <Sidebar collapsible="icon" className="border-r">
+        {/* 侧边栏头部 */}
+        <SidebarHeader className="border-b">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" asChild>
+                <Link href="/admin">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                    <Shield className="size-4" />
+                  </div>
+                  <div className="flex flex-col gap-0.5 leading-none">
+                    <span className="font-semibold">管理控制台</span>
+                    <span className="text-xs text-muted-foreground">好服务平台</span>
+                  </div>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
 
-          <div className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-lg">管理控制台</span>
-          </div>
-
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              管理员：{user.full_name || user.username}
-            </span>
-          </div>
-        </div>
-      </header>
-
-      <div className="flex">
-        {/* 侧边栏 */}
-        <aside className="hidden md:flex w-64 flex-col border-r bg-muted/30 min-h-[calc(100vh-3.5rem)]">
-          <ScrollArea className="flex-1 py-4">
-            <nav className="grid gap-1 px-3">
-              {sidebarNavItems.map((item) => {
-                const isActive = pathname === item.href ||
-                  (item.href !== '/admin' && pathname.startsWith(item.href));
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                    )}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span className="flex-1">{item.title}</span>
+        {/* 侧边栏内容 */}
+        <SidebarContent>
+          {/* 主导航 */}
+          <SidebarGroup>
+            <SidebarGroupLabel>主菜单</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {mainNavItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(item.href)}
+                      tooltip={item.title}
+                    >
+                      <Link href={item.href}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
                     {item.badge && (
-                      <span className={cn(
-                        'text-xs px-1.5 py-0.5 rounded',
-                        isActive
-                          ? 'bg-primary-foreground/20 text-primary-foreground'
-                          : 'bg-muted-foreground/20 text-muted-foreground'
-                      )}>
+                      <SidebarMenuBadge
+                        className={cn(
+                          item.badgeVariant === 'primary'
+                            ? 'bg-primary/20 text-primary'
+                            : 'bg-muted text-muted-foreground'
+                        )}
+                      >
                         {item.badge}
-                      </span>
+                      </SidebarMenuBadge>
                     )}
-                  </Link>
-                );
-              })}
-            </nav>
-          </ScrollArea>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
 
-          {/* 侧边栏底部信息 */}
-          <div className="border-t p-4">
-            <div className="rounded-lg bg-muted p-3">
-              <p className="text-xs text-muted-foreground">
-                好服务管理系统 v1.0
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                标记&quot;选作&quot;的功能为可选实现
-              </p>
+          <SidebarSeparator />
+
+          {/* 管理功能 */}
+          <SidebarGroup>
+            <SidebarGroupLabel>管理功能</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {managementNavItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(item.href)}
+                      tooltip={item.title}
+                    >
+                      <Link href={item.href}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                    {item.badge && (
+                      <SidebarMenuBadge className="bg-muted text-muted-foreground">
+                        {item.badge}
+                      </SidebarMenuBadge>
+                    )}
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <SidebarSeparator />
+
+          {/* 设置 */}
+          <SidebarGroup>
+            <SidebarGroupLabel>系统</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {settingsNavItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(item.href)}
+                      tooltip={item.title}
+                    >
+                      <Link href={item.href}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                    {item.badge && (
+                      <SidebarMenuBadge className="bg-muted text-muted-foreground">
+                        {item.badge}
+                      </SidebarMenuBadge>
+                    )}
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+
+        {/* 侧边栏底部 */}
+        <SidebarFooter className="border-t">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip="返回主站">
+                <Link href="/dashboard">
+                  <ArrowLeft />
+                  <span>返回主站</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+          <div className="px-2 py-2 group-data-[collapsible=icon]:hidden">
+            <div className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
+              <p>好服务管理系统 v1.0</p>
+              <p className="mt-1">按 <kbd className="px-1 py-0.5 rounded bg-muted text-[10px]">⌘B</kbd> 折叠侧边栏</p>
             </div>
           </div>
-        </aside>
+        </SidebarFooter>
 
-        {/* 主内容区 */}
-        <main className="flex-1 min-h-[calc(100vh-3.5rem)]">
-          <div className="container py-6 max-w-7xl">
+        <SidebarRail />
+      </Sidebar>
+
+      {/* 主内容区 */}
+      <SidebarInset>
+        {/* 顶部栏 */}
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+          <SidebarTrigger className="-ml-1" />
+          <div className="h-4 w-px bg-border" />
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">管理员：</span>
+            <span className="font-medium">{user.full_name || user.username}</span>
+          </div>
+        </header>
+
+        {/* 页面内容 */}
+        <main className="flex-1 p-6">
+          <div className="mx-auto max-w-7xl">
             {children}
           </div>
         </main>
-      </div>
+      </SidebarInset>
 
       <Toaster />
-    </div>
+    </SidebarProvider>
   );
 }

@@ -10,6 +10,13 @@ export interface User {
   last_login: string | null;
 }
 
+// 管理员用户列表类型
+export interface AdminUser extends User {
+  is_active: boolean;
+  needs_count: number;
+  responses_count: number;
+}
+
 // 地域类型
 export interface Region {
   id: number;

@@ -6,11 +6,14 @@ from django.utils import timezone
 from django.db import transaction
 
 from .models import Response as ServiceResponse, AcceptedMatch
+from django.db.models import Q
 from .serializers import (
     ResponseListSerializer,
     ResponseDetailSerializer,
     ResponseCreateSerializer,
     ResponseUpdateSerializer,
+    AdminResponseSerializer,
+    AdminResponseUpdateSerializer,
 )
 
 
@@ -216,9 +219,162 @@ class RejectResponseView(APIView):
         
         response_obj.status = 2
         response_obj.save()
-        
+
         return Response({
             'code': 200,
             'message': '已拒绝响应',
             'data': ResponseDetailSerializer(response_obj).data
+        })
+
+
+class AdminResponseListView(APIView):
+    """管理员 - 响应列表"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # 检查是否是管理员
+        if request.user.user_type != 'admin':
+            return Response({
+                'code': 403,
+                'message': '仅管理员可访问'
+            }, status=403)
+
+        # 获取查询参数
+        search = request.query_params.get('search', '')
+        status_filter = request.query_params.get('status', '')
+        need_id = request.query_params.get('need_id', '')
+        user_id = request.query_params.get('user_id', '')
+        ordering = request.query_params.get('ordering', '-created_at')
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 10))
+
+        # 查询响应列表
+        queryset = ServiceResponse.objects.select_related('user', 'need', 'need__user', 'need__region')
+
+        # 搜索过滤
+        if search:
+            queryset = queryset.filter(
+                Q(description__icontains=search) |
+                Q(user__username__icontains=search) |
+                Q(user__full_name__icontains=search) |
+                Q(need__title__icontains=search)
+            )
+
+        # 状态过滤
+        if status_filter != '':
+            queryset = queryset.filter(status=int(status_filter))
+
+        # 需求过滤
+        if need_id:
+            queryset = queryset.filter(need_id=need_id)
+
+        # 用户过滤
+        if user_id:
+            queryset = queryset.filter(user_id=user_id)
+
+        # 排序
+        if ordering:
+            queryset = queryset.order_by(ordering)
+
+        # 分页
+        total = queryset.count()
+        start = (page - 1) * page_size
+        end = start + page_size
+        responses = queryset[start:end]
+
+        serializer = AdminResponseSerializer(responses, many=True)
+
+        return Response({
+            'code': 200,
+            'message': 'success',
+            'data': {
+                'results': serializer.data,
+                'total': total,
+                'page': page,
+                'page_size': page_size,
+                'total_pages': (total + page_size - 1) // page_size,
+            }
+        })
+
+
+class AdminResponseDetailView(APIView):
+    """管理员 - 响应详情/更新/删除"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        # 检查是否是管理员
+        if request.user.user_type != 'admin':
+            return Response({
+                'code': 403,
+                'message': '仅管理员可访问'
+            }, status=403)
+
+        try:
+            response_obj = ServiceResponse.objects.select_related('user', 'need', 'need__user', 'need__region').get(pk=pk)
+        except ServiceResponse.DoesNotExist:
+            return Response({
+                'code': 404,
+                'message': '响应不存在'
+            }, status=404)
+
+        serializer = AdminResponseSerializer(response_obj)
+        return Response({
+            'code': 200,
+            'message': 'success',
+            'data': serializer.data
+        })
+
+    def put(self, request, pk):
+        # 检查是否是管理员
+        if request.user.user_type != 'admin':
+            return Response({
+                'code': 403,
+                'message': '仅管理员可访问'
+            }, status=403)
+
+        try:
+            response_obj = ServiceResponse.objects.get(pk=pk)
+        except ServiceResponse.DoesNotExist:
+            return Response({
+                'code': 404,
+                'message': '响应不存在'
+            }, status=404)
+
+        serializer = AdminResponseUpdateSerializer(response_obj, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            response_obj.refresh_from_db()
+            return Response({
+                'code': 200,
+                'message': '更新成功',
+                'data': AdminResponseSerializer(response_obj).data
+            })
+        return Response({
+            'code': 400,
+            'message': '更新失败',
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        # 检查是否是管理员
+        if request.user.user_type != 'admin':
+            return Response({
+                'code': 403,
+                'message': '仅管理员可访问'
+            }, status=403)
+
+        try:
+            response_obj = ServiceResponse.objects.get(pk=pk)
+        except ServiceResponse.DoesNotExist:
+            return Response({
+                'code': 404,
+                'message': '响应不存在'
+            }, status=404)
+
+        # 管理员可以强制删除（软删除，设为已取消）
+        response_obj.status = 3
+        response_obj.save()
+        return Response({
+            'code': 200,
+            'message': '删除成功'
         })

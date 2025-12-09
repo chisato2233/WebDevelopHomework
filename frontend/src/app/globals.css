@@ -169,6 +169,18 @@
   }
 }
 
+/* Sidebar 滚动条隐藏 */
+[data-sidebar="content"],
+[data-sidebar="sidebar"] {
+  overflow-x: hidden !important;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+[data-sidebar="content"]::-webkit-scrollbar,
+[data-sidebar="sidebar"]::-webkit-scrollbar {
+  display: none;
+}
+
 /* ReactNextPlayer 全屏样式修复 */
 .rnp-container:fullscreen,
 .rnp-container:-webkit-full-screen,

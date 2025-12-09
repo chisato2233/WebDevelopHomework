@@ -52,6 +52,10 @@ app/needs/
 │   └── NeedCard.tsx      # 单个需求卡片
 ```
 
+### 4. UI 组件库使用
+- 布局组件使用 `shadcn/ui` 的 Sidebar 组件系统
+- 管理后台使用独立的 Sidebar 布局，与主站 Header 布局分离
+
 ---
 
 ## 技术栈
@@ -160,7 +164,19 @@ WebDevelopHomework/
 │   │   │   │   └── [id]/edit/  # 编辑需求
 │   │   │   ├── my-responses/   # 我的响应
 │   │   │   │   └── [id]/edit/  # 编辑响应
-│   │   │   └── profile/        # 个人信息
+│   │   │   ├── profile/        # 个人信息
+│   │   │   └── admin/          # 管理后台 (仅管理员)
+│   │   │       ├── layout.tsx      # 管理后台布局 (Sidebar)
+│   │   │       ├── page.tsx        # 管理概览
+│   │   │       ├── statistics/     # 统计分析页面 (必选)
+│   │   │       ├── users/          # 用户管理 (选作)
+│   │   │       ├── needs/          # 需求管理 (选作)
+│   │   │       │   ├── page.tsx        # 需求列表
+│   │   │       │   └── [id]/page.tsx   # 需求详情 (含关联响应)
+│   │   │       ├── responses/      # 响应管理 (选作)
+│   │   │       │   ├── page.tsx        # 响应列表
+│   │   │       │   └── [id]/page.tsx   # 响应详情 (含关联需求)
+│   │   │       └── settings/       # 系统设置 (选作)
 │   │   ├── components/         # 组件
 │   │   │   ├── layout/         # 布局组件 (Header, MainLayout)
 │   │   │   └── ui/             # shadcn/ui 组件
@@ -188,10 +204,77 @@ WebDevelopHomework/
 | 文件上传 | `/api/needs/upload/` | 图片/视频上传 |
 | 媒体流 | `/media/<path>` | 支持 Range 请求的媒体文件流 |
 | 响应 | `/api/responses/` | 响应 CRUD、接受/拒绝 |
-| 统计 | `/api/stats/` | 月度统计数据 |
+| 统计 | `/api/statistics/` | 月度统计、平台概览 (管理员) |
 
-**认证方式**：JWT Token  
+**认证方式**：JWT Token
 **请求头**：`Authorization: Bearer <access_token>`
+
+### 统计 API 详情 (管理员专用)
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/api/statistics/overview/` | GET | 获取平台概览数据 (用户数、需求数、匹配数) |
+| `/api/statistics/monthly/` | GET | 获取月度统计图表数据 |
+
+**月度统计参数**：
+- `start_month`: 起始月份 (格式: YYYYMM)
+- `end_month`: 终止月份 (格式: YYYYMM)
+- `region_id`: 地域筛选 (可选)
+- `service_type`: 服务类型筛选 (可选)
+
+### 用户管理 API 详情 (管理员专用)
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/api/auth/admin/users/` | GET | 获取用户列表 (支持搜索、筛选、分页) |
+| `/api/auth/admin/users/<id>/` | GET | 获取用户详情 |
+| `/api/auth/admin/users/<id>/` | PUT | 更新用户信息 |
+
+**用户列表参数**：
+- `search`: 搜索关键词 (用户名、姓名、手机号)
+- `user_type`: 用户类型筛选 (normal/admin)
+- `is_active`: 启用状态筛选 (true/false)
+- `ordering`: 排序字段 (-date_joined, date_joined, -last_login, username)
+- `page`: 页码
+- `page_size`: 每页数量
+
+### 需求管理 API 详情 (管理员专用)
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/api/needs/admin/` | GET | 获取需求列表 (支持搜索、筛选、分页) |
+| `/api/needs/admin/<id>/` | GET | 获取需求详情 |
+| `/api/needs/admin/<id>/` | PUT | 更新需求信息 |
+| `/api/needs/admin/<id>/` | DELETE | 删除需求 (软删除) |
+| `/api/needs/admin/<id>/responses/` | GET | 获取需求关联的响应列表 |
+
+**需求列表参数**：
+- `search`: 搜索关键词 (标题、描述、用户名)
+- `service_type`: 服务类型筛选
+- `region_id`: 地域筛选
+- `status`: 状态筛选 (0=已发布, -1=已取消)
+- `user_id`: 用户ID筛选
+- `ordering`: 排序字段 (-created_at, created_at, -updated_at, title)
+- `page`: 页码
+- `page_size`: 每页数量
+
+### 响应管理 API 详情 (管理员专用)
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/api/responses/admin/` | GET | 获取响应列表 (支持搜索、筛选、分页) |
+| `/api/responses/admin/<id>/` | GET | 获取响应详情 |
+| `/api/responses/admin/<id>/` | PUT | 更新响应信息 |
+| `/api/responses/admin/<id>/` | DELETE | 删除响应 (软删除，设为已取消) |
+
+**响应列表参数**：
+- `search`: 搜索关键词 (描述、用户名、需求标题)
+- `status`: 状态筛选 (0=待接受, 1=已同意, 2=已拒绝, 3=已取消)
+- `need_id`: 需求ID筛选
+- `user_id`: 用户ID筛选
+- `ordering`: 排序字段 (-created_at, created_at, -updated_at, status)
+- `page`: 页码
+- `page_size`: 每页数量
 
 ---
 
@@ -294,6 +377,71 @@ MonthlyStatistics (月度统计)
 | MEAL_SERVICE | 营养餐服务 |
 | TRANSPORT | 定期接送服务 |
 | OTHER | 其他 |
+
+---
+
+## 管理后台功能 (Admin)
+
+管理后台位于 `/admin` 路由，仅 `user_type='admin'` 的用户可访问。
+
+### 功能模块
+
+| 模块 | 路由 | 状态 | 说明 |
+|------|------|------|------|
+| 管理概览 | `/admin` | 已实现 | 显示注册用户、发布需求、成功匹配的汇总数据 |
+| 统计分析 | `/admin/statistics` | 已实现 (必选) | 月度统计图表 (折线/柱状)、明细表格、多维筛选 |
+| 用户管理 | `/admin/users` | 已实现 (选作) | 用户列表、搜索、筛选、编辑用户信息 |
+| 需求管理 | `/admin/needs` | 已实现 (选作) | 需求列表、详情页、关联响应、编辑、删除 |
+| 响应管理 | `/admin/responses` | 已实现 (选作) | 响应列表、详情页、关联需求、编辑、删除 |
+| 系统设置 | `/admin/settings` | 选作 | 系统配置 |
+
+### 统计分析功能
+
+- **筛选维度**：时间范围、地域、服务类型
+- **图表类型**：折线图、柱状图 (可切换)
+- **数据展示**：趋势图 + 明细表格 (Tab 切换)
+- **汇总数据**：累计需求数、累计响应数、响应率
+
+### 用户管理功能
+
+- **用户列表**：分页展示所有用户
+- **搜索筛选**：支持用户名、姓名、手机号搜索，用户类型和状态筛选
+- **排序**：支持按注册时间、最近登录、用户名排序
+- **用户编辑**：修改姓名、手机号、简介、用户类型、启用状态
+- **统计信息**：显示每个用户的需求数和响应数
+
+### 需求管理功能
+
+- **需求列表**：分页展示所有需求，点击行跳转详情
+- **搜索筛选**：支持标题、描述、用户名搜索，服务类型、地域、状态筛选
+- **排序**：支持按创建时间、更新时间、标题排序
+- **详情页面** (`/admin/needs/[id]`)：
+  - 需求完整信息 (标题、描述、图片、视频)
+  - 发布者信息、地域、服务类型、状态
+  - 响应统计 (总响应数、已接受数)
+  - 关联响应列表 (响应者信息、状态、描述、图片、视频)
+- **需求编辑**：修改标题、描述、服务类型、地域、状态
+- **需求删除**：软删除 (标记为已取消)
+
+### 响应管理功能
+
+- **响应列表**：分页展示所有响应，点击行跳转详情
+- **搜索筛选**：支持描述、用户名、需求标题搜索，状态筛选
+- **排序**：支持按创建时间、更新时间、状态排序
+- **详情页面** (`/admin/responses/[id]`)：
+  - 响应完整信息 (描述、图片、视频)
+  - 响应者信息 (姓名、电话、响应时间)
+  - 响应状态 (待接受/已同意/已拒绝/已取消)
+  - 关联需求信息 (标题、描述、发布者、地域、服务类型)
+  - 跳转关联需求详情按钮
+- **响应编辑**：修改描述、状态
+- **响应删除**：软删除 (标记为已取消)
+
+### 布局特点
+
+- 使用独立的 Sidebar 布局 (shadcn/ui Sidebar 组件)
+- 与主站 Header 布局分离
+- 响应式设计，支持侧边栏折叠
 
 ---
 

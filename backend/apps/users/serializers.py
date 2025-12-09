@@ -72,13 +72,40 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 class UpdateProfileSerializer(serializers.ModelSerializer):
     """更新个人信息序列化器"""
-    
+
     class Meta:
         model = User
         fields = ['phone', 'bio']
-    
+
     def validate_phone(self, value):
         if len(value) != 11 or not value.isdigit():
             raise serializers.ValidationError('手机号必须为11位数字')
         return value
 
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    """管理员查看用户信息序列化器"""
+    needs_count = serializers.IntegerField(read_only=True)
+    responses_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'full_name', 'phone', 'bio',
+            'user_type', 'is_active', 'date_joined', 'last_login',
+            'needs_count', 'responses_count'
+        ]
+        read_only_fields = ['id', 'username', 'date_joined', 'last_login', 'needs_count', 'responses_count']
+
+
+class AdminUserUpdateSerializer(serializers.ModelSerializer):
+    """管理员更新用户信息序列化器"""
+
+    class Meta:
+        model = User
+        fields = ['full_name', 'phone', 'bio', 'user_type', 'is_active']
+
+    def validate_phone(self, value):
+        if value and (len(value) != 11 or not value.isdigit()):
+            raise serializers.ValidationError('手机号必须为11位数字')
+        return value

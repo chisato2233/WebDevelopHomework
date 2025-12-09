@@ -67,13 +67,35 @@ class ResponseCreateSerializer(serializers.ModelSerializer):
 
 class ResponseUpdateSerializer(serializers.ModelSerializer):
     """更新响应序列化器"""
-    
+
     class Meta:
         model = ServiceResponse
         fields = ['description', 'images', 'videos']
-    
+
     def validate(self, attrs):
         if not self.instance.can_edit:
             raise serializers.ValidationError('该响应已被处理，无法修改')
         return attrs
+
+
+class AdminResponseSerializer(serializers.ModelSerializer):
+    """管理员查看响应序列化器"""
+    user = UserSerializer(read_only=True)
+    need = NeedListSerializer(read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = ServiceResponse
+        fields = [
+            'id', 'need', 'user', 'description', 'images', 'videos',
+            'status', 'status_display', 'created_at', 'updated_at'
+        ]
+
+
+class AdminResponseUpdateSerializer(serializers.ModelSerializer):
+    """管理员更新响应序列化器"""
+
+    class Meta:
+        model = ServiceResponse
+        fields = ['description', 'status']
 
