@@ -5,12 +5,30 @@ import { useRouter, usePathname } from 'next/navigation';
 import Header from './Header';
 import { useAuth } from '@/hooks/useAuth';
 import { Toaster } from '@/components/ui/sonner';
+import { PageTransition, TransitionVariant, TransitionType } from '@/components/motion/PageTransition';
 
 interface MainLayoutProps {
   children: React.ReactNode;
+  /** Animation variant for page transitions (ignored when directionAware is true) */
+  transition?: TransitionVariant;
+  /** Transition timing preset */
+  transitionType?: TransitionType;
+  /** Disable page transition animation */
+  disableTransition?: boolean;
+  /** Enable direction-aware sliding based on nav tab position (default: true) */
+  directionAware?: boolean;
+  /** Fallback animation when direction cannot be determined */
+  fallbackTransition?: TransitionVariant;
 }
 
-export default function MainLayout({ children }: MainLayoutProps) {
+export default function MainLayout({
+  children,
+  transition = 'scaleBlur',
+  transitionType = 'smooth',
+  disableTransition = false,
+  directionAware = true,
+  fallbackTransition = 'scaleBlur',
+}: MainLayoutProps) {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -39,7 +57,15 @@ export default function MainLayout({ children }: MainLayoutProps) {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container py-6">
-        {children}
+        <PageTransition
+          variant={transition}
+          transition={transitionType}
+          disabled={disableTransition}
+          directionAware={directionAware}
+          fallbackVariant={fallbackTransition}
+        >
+          {children}
+        </PageTransition>
       </main>
       <Toaster />
     </div>
