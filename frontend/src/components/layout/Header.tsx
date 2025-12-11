@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Home, Search, FileText, HandHelping, Shield, User, LogOut, Settings } from 'lucide-react';
+import { Home, Search, FileText, HandHelping, Shield, User, LogOut, Settings, Link2 } from 'lucide-react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -129,9 +129,9 @@ export default function Header() {
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-2 font-bold text-xl">
-          <span className="text-2xl">🤝</span>
+          <Link2 className="h-6 w-6 text-primary" />
           <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-            好服务
+            Nexus
           </span>
         </Link>
 

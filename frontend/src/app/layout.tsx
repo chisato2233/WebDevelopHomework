@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "好服务平台",
-  description: "社区服务供需匹配平台",
+  title: "Nexus",
+  description: "Nexus - 社区服务供需匹配平台",
 };
 
 export default function RootLayout({
