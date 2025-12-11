@@ -162,7 +162,7 @@ class AdminUserListView(APIView):
         search = request.query_params.get('search', '')
         user_type = request.query_params.get('user_type', '')
         is_active = request.query_params.get('is_active', '')
-        ordering = request.query_params.get('ordering', '-date_joined')
+        ordering = request.query_params.get('ordering', 'id')
         page = int(request.query_params.get('page', 1))
         page_size = int(request.query_params.get('page_size', 10))
 

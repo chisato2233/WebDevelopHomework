@@ -142,7 +142,7 @@ class AdminNeedListView(APIView):
         region_id = request.query_params.get('region_id', '')
         status_filter = request.query_params.get('status', '')
         user_id = request.query_params.get('user_id', '')
-        ordering = request.query_params.get('ordering', '-created_at')
+        ordering = request.query_params.get('ordering', 'id')
         page = int(request.query_params.get('page', 1))
         page_size = int(request.query_params.get('page_size', 10))
 

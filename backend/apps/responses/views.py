@@ -244,7 +244,7 @@ class AdminResponseListView(APIView):
         status_filter = request.query_params.get('status', '')
         need_id = request.query_params.get('need_id', '')
         user_id = request.query_params.get('user_id', '')
-        ordering = request.query_params.get('ordering', '-created_at')
+        ordering = request.query_params.get('ordering', 'id')
         page = int(request.query_params.get('page', 1))
         page_size = int(request.query_params.get('page_size', 10))
 

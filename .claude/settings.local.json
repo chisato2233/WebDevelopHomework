@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm install:*)",
       "Bash(python manage.py shell:*)",
-      "Bash(npx shadcn@latest add:*)"
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(python scripts/generate_test_data.py:*)"
     ],
     "deny": [],
     "ask": []

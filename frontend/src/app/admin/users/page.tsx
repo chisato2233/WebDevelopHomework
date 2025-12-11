@@ -45,6 +45,9 @@ import {
   HandHelping,
   Shield,
   User as UserIcon,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 
 interface PaginatedUsers {
@@ -70,8 +73,11 @@ export default function AdminUsersPage() {
     search: '',
     user_type: '__all__',
     is_active: '__all__',
-    ordering: '-date_joined',
   });
+
+  // 排序状态
+  const [sortField, setSortField] = useState<string>('id');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // 编辑弹窗
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -85,6 +91,11 @@ export default function AdminUsersPage() {
   });
   const [saving, setSaving] = useState(false);
 
+  // 获取排序参数
+  const getOrdering = useCallback(() => {
+    return sortDirection === 'asc' ? sortField : `-${sortField}`;
+  }, [sortField, sortDirection]);
+
   // 获取用户列表
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -95,7 +106,7 @@ export default function AdminUsersPage() {
       if (filters.search) params.append('search', filters.search);
       if (filters.user_type !== '__all__') params.append('user_type', filters.user_type);
       if (filters.is_active !== '__all__') params.append('is_active', filters.is_active);
-      if (filters.ordering) params.append('ordering', filters.ordering);
+      params.append('ordering', getOrdering());
 
       const response = await api.get(`/auth/admin/users/?${params.toString()}`);
       if (response.data.code === 200) {
@@ -112,7 +123,7 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.pageSize, filters]);
+  }, [pagination.page, pagination.pageSize, filters, getOrdering]);
 
   useEffect(() => {
     fetchUsers();
@@ -160,6 +171,27 @@ export default function AdminUsersPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  // 处理排序点击
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
+
+  // 获取排序图标
+  const getSortIcon = (field: string) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="ml-1 h-4 w-4 text-muted-foreground/50" />;
+    }
+    return sortDirection === 'asc'
+      ? <ArrowUp className="ml-1 h-4 w-4" />
+      : <ArrowDown className="ml-1 h-4 w-4" />;
   };
 
   // 格式化日期
@@ -233,25 +265,6 @@ export default function AdminUsersPage() {
               </SelectContent>
             </Select>
 
-            {/* 排序 */}
-            <Select
-              value={filters.ordering}
-              onValueChange={(value) => {
-                setFilters((prev) => ({ ...prev, ordering: value }));
-                setPagination((prev) => ({ ...prev, page: 1 }));
-              }}
-            >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="排序" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="-date_joined">注册时间 (新)</SelectItem>
-                <SelectItem value="date_joined">注册时间 (旧)</SelectItem>
-                <SelectItem value="-last_login">最近登录</SelectItem>
-                <SelectItem value="username">用户名</SelectItem>
-              </SelectContent>
-            </Select>
-
             {/* 加载指示器 */}
             {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
           </div>
@@ -264,15 +277,47 @@ export default function AdminUsersPage() {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
-                <TableHead className="w-[60px]">ID</TableHead>
-                <TableHead>用户名</TableHead>
+                <TableHead
+                  className="w-[60px] cursor-pointer hover:bg-muted/80 transition-colors select-none"
+                  onClick={() => handleSort('id')}
+                >
+                  <div className="flex items-center">
+                    ID
+                    {getSortIcon('id')}
+                  </div>
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/80 transition-colors select-none"
+                  onClick={() => handleSort('username')}
+                >
+                  <div className="flex items-center">
+                    用户名
+                    {getSortIcon('username')}
+                  </div>
+                </TableHead>
                 <TableHead>姓名</TableHead>
                 <TableHead>手机号</TableHead>
                 <TableHead className="text-center">类型</TableHead>
                 <TableHead className="text-center">状态</TableHead>
                 <TableHead className="text-center">需求/响应</TableHead>
-                <TableHead>注册时间</TableHead>
-                <TableHead>最近登录</TableHead>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/80 transition-colors select-none"
+                  onClick={() => handleSort('date_joined')}
+                >
+                  <div className="flex items-center">
+                    注册时间
+                    {getSortIcon('date_joined')}
+                  </div>
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/80 transition-colors select-none"
+                  onClick={() => handleSort('last_login')}
+                >
+                  <div className="flex items-center">
+                    最近登录
+                    {getSortIcon('last_login')}
+                  </div>
+                </TableHead>
                 <TableHead className="text-center w-[80px]">操作</TableHead>
               </TableRow>
             </TableHeader>
