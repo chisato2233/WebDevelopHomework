@@ -178,9 +178,14 @@ WebDevelopHomework/
 │   │   │       ├── responses/      # 响应管理 (选作)
 │   │   │       │   ├── page.tsx        # 响应列表
 │   │   │       │   └── [id]/page.tsx   # 响应详情 (含关联需求)
+│   │   │       ├── regions/        # 地域管理 (选作)
+│   │   │       │   └── page.tsx        # 地域列表/CRUD
 │   │   │       └── settings/       # 系统设置 (选作)
+│   │   │           └── page.tsx        # 系统配置入口
 │   │   ├── components/         # 组件
 │   │   │   ├── layout/         # 布局组件 (Header, MainLayout)
+│   │   │   ├── motion/         # 动画组件
+│   │   │   │   └── PageTransition.tsx  # 页面过渡动画
 │   │   │   └── ui/             # shadcn/ui 组件
 │   │   ├── hooks/              # 自定义 Hooks (useAuth)
 │   │   ├── lib/                # 工具库 (api, validation)
@@ -201,7 +206,7 @@ WebDevelopHomework/
 | 模块 | 端点前缀 | 主要功能 |
 |------|----------|----------|
 | 认证 | `/api/auth/` | 注册、登录、个人信息 |
-| 地域 | `/api/regions/` | 地域列表查询 |
+| 地域 | `/api/regions/` | 地域列表查询、管理员 CRUD |
 | 需求 | `/api/needs/` | 需求 CRUD、我的需求 |
 | 文件上传 | `/api/needs/upload/` | 图片/视频上传 |
 | 媒体流 | `/media/<path>` | 支持 Range 请求的媒体文件流 |
@@ -275,6 +280,25 @@ WebDevelopHomework/
 - `need_id`: 需求ID筛选
 - `user_id`: 用户ID筛选
 - `ordering`: 排序字段 (-created_at, created_at, -updated_at, status)
+- `page`: 页码
+- `page_size`: 每页数量
+
+### 地域管理 API 详情 (管理员专用)
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/api/regions/admin/` | GET | 获取地域列表 (支持搜索、筛选、分页，含需求统计) |
+| `/api/regions/admin/` | POST | 创建新地域 |
+| `/api/regions/admin/<id>/` | GET | 获取地域详情 |
+| `/api/regions/admin/<id>/` | PUT | 更新地域信息 |
+| `/api/regions/admin/<id>/` | DELETE | 删除地域 (需无关联需求) |
+| `/api/regions/admin/provinces/` | GET | 获取所有省份列表 |
+| `/api/regions/admin/cities/` | GET | 获取城市列表 (支持省份筛选) |
+
+**地域列表参数**：
+- `search`: 搜索关键词 (地域名称、全名)
+- `province`: 省份筛选
+- `city`: 城市筛选
 - `page`: 页码
 - `page_size`: 每页数量
 
@@ -395,7 +419,8 @@ MonthlyStatistics (月度统计)
 | 用户管理 | `/admin/users` | 已实现 (选作) | 用户列表、搜索、筛选、编辑用户信息 |
 | 需求管理 | `/admin/needs` | 已实现 (选作) | 需求列表、详情页、关联响应、编辑、删除 |
 | 响应管理 | `/admin/responses` | 已实现 (选作) | 响应列表、详情页、关联需求、编辑、删除 |
-| 系统设置 | `/admin/settings` | 选作 | 系统配置 |
+| 地域管理 | `/admin/regions` | 已实现 (选作) | 地域 CRUD、省份/城市筛选、需求关联统计 |
+| 系统设置 | `/admin/settings` | 已实现 (选作) | 系统配置入口、系统信息展示 |
 
 ### 统计分析功能
 
@@ -403,6 +428,7 @@ MonthlyStatistics (月度统计)
 - **图表类型**：折线图、柱状图 (可切换)
 - **数据展示**：趋势图 + 明细表格 (Tab 切换)
 - **汇总数据**：累计需求数、累计响应数、响应率
+- **表格排序**：支持按月份、月累计发布需求数、月累计响应成功数排序 (升序/降序)
 
 ### 用户管理功能
 
@@ -439,6 +465,14 @@ MonthlyStatistics (月度统计)
 - **响应编辑**：修改描述、状态
 - **响应删除**：软删除 (标记为已取消)
 
+### 地域管理功能
+
+- **地域列表**：分页展示所有地域，显示需求关联数
+- **搜索筛选**：支持地域名称搜索，省份、城市筛选
+- **地域创建**：弹窗表单创建新地域 (省份、城市、区县)
+- **地域编辑**：弹窗表单编辑地域信息
+- **地域删除**：删除无关联需求的地域 (有关联需求时禁止删除)
+
 ### 布局特点
 
 - 使用独立的 Sidebar 布局 (shadcn/ui Sidebar 组件)
@@ -447,4 +481,41 @@ MonthlyStatistics (月度统计)
 
 ---
 
-*最后更新: 2025-12-09*
+## 动画系统
+
+项目使用 `framer-motion` 实现页面动画效果。
+
+### 页面过渡动画
+
+组件位置：`frontend/src/components/motion/PageTransition.tsx`
+
+**功能特性**：
+- 方向感知：根据导航 Tab 位置自动判断左滑/右滑方向
+- 支持多种过渡效果：fade, slideUp, slideDown, slideLeft, slideRight, scale, blur, scaleBlur
+- 集成在 MainLayout 中，自动应用于主站页面
+
+**导航顺序定义**：
+```typescript
+const NAV_ORDER = ['/dashboard', '/needs', '/my-needs', '/my-responses', '/admin'];
+```
+
+**使用方式**：
+```tsx
+<PageTransition variant="fade" directionAware={true}>
+  {children}
+</PageTransition>
+```
+
+### Header 导航动画
+
+组件位置：`frontend/src/components/layout/Header.tsx`
+
+**功能特性**：
+- 非激活项只显示图标，激活项显示图标+文字
+- Hover 时展开显示文字，带有缩放和模糊效果
+- 使用 `layout="position"` 避免布局抖动
+- Spring 弹性动画配置：`stiffness: 500, damping: 30`
+
+---
+
+*最后更新: 2025-12-11*

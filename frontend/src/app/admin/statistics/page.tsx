@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Loader2, BarChart3, TrendingUp, FileText, Users, LineChartIcon, BarChart2 } from 'lucide-react';
+import { Loader2, BarChart3, TrendingUp, FileText, Users, LineChartIcon, BarChart2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -51,6 +51,8 @@ const generateMonthOptions = () => {
 const MONTH_OPTIONS = generateMonthOptions();
 
 type ChartType = 'line' | 'bar';
+type SortField = 'month' | 'needs' | 'accepted' | null;
+type SortDirection = 'asc' | 'desc';
 
 export default function AdminStatisticsPage() {
   const { user } = useAuth();
@@ -60,6 +62,8 @@ export default function AdminStatisticsPage() {
   const [summary, setSummary] = useState<{ total_needs: number; total_accepted: number } | null>(null);
   const [chartType, setChartType] = useState<ChartType>('line');
   const [activeTab, setActiveTab] = useState<'chart' | 'table'>('chart');
+  const [sortField, setSortField] = useState<SortField>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   // 筛选条件
   const [filters, setFilters] = useState({
@@ -126,6 +130,57 @@ export default function AdminStatisticsPage() {
       需求发布数: chartData.needs[index],
       响应成功数: chartData.accepted[index],
     }));
+  };
+
+  // 获取排序后的表格数据
+  const getSortedTableData = () => {
+    if (!chartData) return [];
+
+    const data = chartData.labels.map((label, index) => ({
+      month: label,
+      monthValue: label, // 用于月份排序
+      needs: chartData.needs[index],
+      accepted: chartData.accepted[index],
+      rate: chartData.needs[index] > 0
+        ? ((chartData.accepted[index] / chartData.needs[index]) * 100).toFixed(1)
+        : '0.0',
+    }));
+
+    if (!sortField) return data;
+
+    return [...data].sort((a, b) => {
+      let comparison = 0;
+      if (sortField === 'month') {
+        comparison = a.monthValue.localeCompare(b.monthValue);
+      } else if (sortField === 'needs') {
+        comparison = a.needs - b.needs;
+      } else if (sortField === 'accepted') {
+        comparison = a.accepted - b.accepted;
+      }
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  };
+
+  // 处理排序点击
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // 同一字段，切换排序方向
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // 不同字段，设置新字段，默认降序
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  // 获取排序图标
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="ml-1 h-4 w-4 text-muted-foreground/50" />;
+    }
+    return sortDirection === 'asc'
+      ? <ArrowUp className="ml-1 h-4 w-4" />
+      : <ArrowDown className="ml-1 h-4 w-4" />;
   };
 
   return (
@@ -394,30 +449,49 @@ export default function AdminStatisticsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/50">
-                        <TableHead className="font-semibold">月份</TableHead>
-                        <TableHead className="text-right font-semibold">月累计发布需求数</TableHead>
-                        <TableHead className="text-right font-semibold">月累计响应成功数</TableHead>
+                        <TableHead
+                          className="font-semibold cursor-pointer hover:bg-muted/80 transition-colors select-none"
+                          onClick={() => handleSort('month')}
+                        >
+                          <div className="flex items-center">
+                            月份
+                            {getSortIcon('month')}
+                          </div>
+                        </TableHead>
+                        <TableHead
+                          className="text-right font-semibold cursor-pointer hover:bg-muted/80 transition-colors select-none"
+                          onClick={() => handleSort('needs')}
+                        >
+                          <div className="flex items-center justify-end">
+                            月累计发布需求数
+                            {getSortIcon('needs')}
+                          </div>
+                        </TableHead>
+                        <TableHead
+                          className="text-right font-semibold cursor-pointer hover:bg-muted/80 transition-colors select-none"
+                          onClick={() => handleSort('accepted')}
+                        >
+                          <div className="flex items-center justify-end">
+                            月累计响应成功数
+                            {getSortIcon('accepted')}
+                          </div>
+                        </TableHead>
                         <TableHead className="text-right font-semibold">响应率</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {chartData.labels.map((label, index) => {
-                        const needs = chartData.needs[index];
-                        const accepted = chartData.accepted[index];
-                        const rate = needs > 0 ? ((accepted / needs) * 100).toFixed(1) : '0.0';
-                        return (
-                          <TableRow key={label}>
-                            <TableCell className="font-medium">{label}</TableCell>
-                            <TableCell className="text-right">
-                              <span className="text-blue-500 font-medium">{needs}</span>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <span className="text-green-500 font-medium">{accepted}</span>
-                            </TableCell>
-                            <TableCell className="text-right">{rate}%</TableCell>
-                          </TableRow>
-                        );
-                      })}
+                      {getSortedTableData().map((row) => (
+                        <TableRow key={row.month}>
+                          <TableCell className="font-medium">{row.month}</TableCell>
+                          <TableCell className="text-right">
+                            <span className="text-blue-500 font-medium">{row.needs}</span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span className="text-green-500 font-medium">{row.accepted}</span>
+                          </TableCell>
+                          <TableCell className="text-right">{row.rate}%</TableCell>
+                        </TableRow>
+                      ))}
                       {/* 合计行 */}
                       <TableRow className="bg-muted/30 font-semibold">
                         <TableCell>合计</TableCell>

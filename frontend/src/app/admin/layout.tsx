@@ -35,6 +35,7 @@ import {
   ArrowLeft,
   Shield,
   Loader2,
+  MapPin,
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -78,6 +79,12 @@ const managementNavItems = [
 ];
 
 const settingsNavItems = [
+  {
+    title: '地域管理',
+    href: '/admin/regions',
+    icon: MapPin,
+    badge: '选作',
+  },
   {
     title: '系统设置',
     href: '/admin/settings',
